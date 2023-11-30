@@ -2,9 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initDatabase } from '../../services/db';
+import { saveDateTimeData } from '../../services/queries';
 
-export default function DateTimeForm() {
+initDatabase(); // Initialize the database when the app starts
+
+export default function DateTimeForm({ closeModal }) {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [timeDifference, setTimeDifference] = useState('');
@@ -25,15 +28,16 @@ export default function DateTimeForm() {
     return formattedDuration;
   };
 
-  const saveData = async () => {
-    try {
-      await AsyncStorage.setItem('startDate', startDate.toString());
-      await AsyncStorage.setItem('endDate', endDate.toString());
-      await AsyncStorage.setItem('timeDifference', timeDifference);
-      console.log('Data saved successfully!');
-    } catch (error) {
+  const saveData = () => {
+    saveDateTimeData(startDate, endDate, timeDifference, () => {
+      // Success callback
+      // You can add any logic you want to execute after saving the data successfully
+      closeModal(); // Close the modal
+    }, (error) => {
+      // Error callback
       console.error('Error saving data:', error);
-    }
+      // Handle the error as needed
+    });
   };
 
   useEffect(() => {
@@ -82,7 +86,10 @@ export default function DateTimeForm() {
       {/*<Text>{startDate.toLocaleString()}</Text>
       <Text>{endDate.toLocaleString()}</Text> */}
       <Text style={styles.titles}>Time Difference: {calculateDifference(startDate, endDate)}</Text>
-      <Pressable style={styles.button} onPress={saveData}>
+      <Pressable 
+        style={styles.button} 
+        onPress={saveData}
+      >
         <Text style={styles.buttonText}>Save</Text>
       </Pressable>
     </View>

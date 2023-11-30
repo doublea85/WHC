@@ -6,6 +6,14 @@ import Dashboard from "./src/components/Dashboard";
 
 export default function App() {
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+  };
+
+
+
+
   return (
     <View style={styles.container}>
       <View>
@@ -27,11 +35,11 @@ export default function App() {
                 color="midnightblue"
                 onPress={() => setIsModalVisible(false)}
               />
-              <DateTimeForm />
+              <DateTimeForm closeModal={closeModal} />
             </View>
         </Modal>
       </View>
-      <Dashboard/>
+      <Dashboard closeModal={closeModal}/>
       <StatusBar style="auto" />
     </View>
   );
