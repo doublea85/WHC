@@ -46,10 +46,10 @@ export default function DateTimeForm({ closeModal }) {
   }, [startDate, endDate]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.group}>
-        <Text style={styles.titles}>FROM</Text>
-        <View style={styles.pickers}>
+    <View className="flex-1 justify-center items-center p-6 bg-beige">
+      <View className="mb-8">
+        <Text className="text-lg font-bold">FROM</Text>
+        <View className="flex-row">
           <DateTimePicker
             value={startDate}
             mode={"date"}
@@ -65,9 +65,9 @@ export default function DateTimeForm({ closeModal }) {
         </View>
       </View>
 
-      <View style={styles.group}>
-        <Text style={styles.titles}>TO</Text>
-        <View style={styles.pickers}>
+      <View className="mb-8">
+        <Text className="text-lg font-bold">TO</Text>
+        <View className="flex-row">
           <DateTimePicker
             value={endDate}
             mode={"date"}
@@ -85,51 +85,13 @@ export default function DateTimeForm({ closeModal }) {
 
       {/*<Text>{startDate.toLocaleString()}</Text>
       <Text>{endDate.toLocaleString()}</Text> */}
-      <Text style={styles.titles}>Time Difference: {calculateDifference(startDate, endDate)}</Text>
-      <Pressable 
-        style={styles.button} 
+      <Text className="text-lg font-bold mb-2">Time Difference: {calculateDifference(startDate, endDate)}</Text>
+      <Pressable
         onPress={saveData}
+        className="bg-green-500 rounded-xl pt-2 pb-2 pr-6 pl-6"
       >
-        <Text style={styles.buttonText}>Save</Text>
+        <Text className="text-white text-xl font-bold">Save</Text>
       </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    rowGap: 30,
-    width: "100%",
-    backgroundColor: "beige",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pickers: {
-    flexDirection: "row",
-  },
-  titles: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  group: {
-    flexDirection: "row",
-    rowGap: 5,
-    alignItems: "center",
-  },
-  button: {
-    alignItems: "center",
-    justifyContent: "center",
-    height: 40,
-    width: 80,
-    borderRadius: 5,
-    elevation: 3,
-    backgroundColor: "lightblue",
-    paddingHorizontal: 10,
-  },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-  }
-});

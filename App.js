@@ -1,72 +1,50 @@
-import { useState } from "react";
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Modal, Button, Pressable } from "react-native";
-import DateTimeForm from "./src/components/DateTimeForm";
-import Dashboard from "./src/components/Dashboard";
+import HomeScreen from "./screens/HomeScreen";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+
+const stack = createNativeStackNavigator();
 
 export default function App() {
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const closeModal = () => {
-    setIsModalVisible(false);
-  };
-
-
 
 
   return (
-    <View style={styles.container}>
-      <View>
-        <Pressable
-          style={styles.button}
-          onPress={() => setIsModalVisible(true)}
-        >
-          <Text style={styles.text}>+</Text>
-        </Pressable>
-        <Modal
-          visible={isModalVisible}
-          onRequestClose={() => setIsModalVisible(false)}
-          animationType="slide"
-          presentationStyle="pageSheet"
-        >
-            <View style={styles.container}>
-              <Button
-                title="close"
-                color="midnightblue"
-                onPress={() => setIsModalVisible(false)}
-              />
-              <DateTimeForm closeModal={closeModal} />
-            </View>
-        </Modal>
-      </View>
-      <Dashboard closeModal={closeModal}/>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <stack.Navigator>
+        <stack.Screen 
+          name="Home"
+          component={HomeScreen}
+        />
+      </stack.Navigator>
+    </NavigationContainer>
+    // <View className="flex-1 flex justify-center items-center bg-slate-500 absolute">
+    //   <View className="flex-1 flex justify-center items-center">
+    //     <Pressable
+    //       onPress={() => setIsModalVisible(true)}
+    //       className="relative h-20 w-20 flex justify-center items-center rounded-full bg-red-800"
+    //     >
+    //       <Text>+</Text>
+    //     </Pressable>
+    //     <Modal
+    //       visible={isModalVisible}
+    //       onRequestClose={() => setIsModalVisible(false)}
+    //       animationType="slide"
+    //       presentationStyle="pageSheet"
+    //     >
+    //         <View>
+    //           <Button
+    //             title="close"
+    //             color="midnightblue"
+    //             onPress={() => setIsModalVisible(false)}
+    //           />
+    //           <DateTimeForm closeModal={closeModal} />
+    //         </View>
+    //     </Modal>
+    //   </View>
+    //   <View>
+    //     <Dashboard closeModal={closeModal}/>
+    //   </View>
+    //   <StatusBar style="auto" />
+    // </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  button: {
-    alignItems: "center",
-    justifyContent: "center",
-    height: 50,
-    width: 50,
-    borderRadius: 50,
-    elevation: 3,
-    backgroundColor: "midnightblue",
-    position: "absolute",
-    top: 330,
-    left: 120,
-  },
-  text: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: "white",
-  },
-});
