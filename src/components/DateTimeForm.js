@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { Text, View, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { initDatabase } from '../../services/db';
 import { saveDateTimeData } from '../../services/queries';
 
 initDatabase(); // Initialize the database when the app starts
 
-export default function DateTimeForm({ closeModal }) {
+export default function DateTimeForm({ closeBottomSheet }) {
+
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [timeDifference, setTimeDifference] = useState('');
@@ -30,13 +31,10 @@ export default function DateTimeForm({ closeModal }) {
 
   const saveData = () => {
     saveDateTimeData(startDate, endDate, timeDifference, () => {
-      // Success callback
-      // You can add any logic you want to execute after saving the data successfully
-      closeModal(); // Close the modal
+      
+      closeBottomSheet()
     }, (error) => {
-      // Error callback
       console.error('Error saving data:', error);
-      // Handle the error as needed
     });
   };
 
@@ -47,8 +45,8 @@ export default function DateTimeForm({ closeModal }) {
 
   return (
     <View className="flex-1 justify-center items-center p-6 bg-beige">
-      <View className="mb-8">
-        <Text className="text-lg font-bold">FROM</Text>
+      <View className="mb-8 flex-row">
+        <Text className="text-lg font-bold">FROM: </Text>
         <View className="flex-row">
           <DateTimePicker
             value={startDate}
@@ -65,8 +63,8 @@ export default function DateTimeForm({ closeModal }) {
         </View>
       </View>
 
-      <View className="mb-8">
-        <Text className="text-lg font-bold">TO</Text>
+      <View className="mb-8 flex-row">
+        <Text className="text-lg font-bold mr-8">TO: </Text>
         <View className="flex-row">
           <DateTimePicker
             value={endDate}
