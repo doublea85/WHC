@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View, Pressable, Button, Alert } from "react-native";
 import { getAllDateTimeData, deleteDateTimeData } from "../../services/queries";
-import { VictoryBar, VictoryChart, VictoryAxis } from "victory-native";
+import {
+  VictoryBar,
+  VictoryChart,
+  VictoryAxis,
+  VictoryTheme,
+} from "victory-native";
+import Feather from '@expo/vector-icons/Feather';
 
-const Dashboard = ({ closeModal }) => {
+const Dashboard = ({ closeBottomSheet }) => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
@@ -13,11 +19,12 @@ const Dashboard = ({ closeModal }) => {
         // console.log("Fetched data:", result);
         setData(result);
       },
+
       (error) => {
         console.error("Error fetching data:", error);
       }
     );
-  }, [closeModal]);
+  }, [handleDelete, closeBottomSheet]);
 
   const handleDelete = async (id) => {
     try {
@@ -64,76 +71,70 @@ const Dashboard = ({ closeModal }) => {
     );
   };
 
-  // Extract day from startDate for the VictoryBar chart
   const chartData = data.map((item) => ({
-    day: new Date(item.startDate).toLocaleDateString("fr-FR", {
-      weekday: "short",
-    }),
+    day: new Date(item.startDate)
+      .toLocaleDateString("fr-FR", {
+        weekday: "short",
+      })
+      .slice(0, 3), // Extract only the first 3 characters for short weekday names
     hoursWorked: parseFloat(item.timeDifference),
   }));
 
   return (
-    <View className="flex-1 items-center">
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 20 }}
-      >
-        <View className="mb-4 bg-gray-200 p-4 rounded-lg flex">
-          <Text className="text-lg font-bold mb-2">JOURS TRAVAILLES:</Text>
-          {data.length === 0 ? (
-            <Text className="text-gray-600 p-20">
-              No worked hours available.
-            </Text>
-          ) : (
-            data.map((item) => (
-              <View
-                key={item.id}
-                className="mb-2 p-2 border border-gray-500 rounded flex flex-row items-center justify-between"
-              >
-                <View className="w-7/12 flex">
-                  <Text className="text-lg">
-                    {new Date(item.startDate).toLocaleDateString("fr-FR", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </Text>
-                  <Text className="text-lg">
-                    {formatHours(parseFloat(item.timeDifference))} hours worked
-                  </Text>
-                </View>
-
-                <View className="flex-row items-center">
-                  <Pressable className="bg-blue-500 w-16 h-12 p-4 flex justify-center mr-2 rounded">
-                    <Text className="text-white font-bold text-center">
-                      Edit
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => confirmDelete(item.id)}
-                    className="bg-red-700 w-16 h-12 p-4 flex justify-center rounded"
-                  >
-                    <Text className="text-white font-bold text-center">
-                      Delete
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
-
-      <View className="flex-1 justify-center items-center bg-gray-200">
-        <VictoryChart
-          domainPadding={{ x: 20 }}
-          className="w-full h-48 bg-white p-4 rounded-md elevation-3"
+    <View className="flex-1 items-center p-2">
+      <View className="p-2 flex max-h-96 w-full rounded-md">
+        <Text className="text-lg font-bold mb-2">JOURS TRAVAILLES :</Text>
+        <ScrollView
+          style={{
+            padding: 1,
+            borderRadius: 4,
+            height: "80%",
+          }}
         >
+          {data.map((item) => (
+            <View
+              key={item.id}
+              className="mb-2 p-2 bg-white flex flex-row items-center justify-between rounded-md border border-slate-400"
+            >
+              <View className="flex">
+                <Text className="text-lg">
+                  {new Date(item.startDate).toLocaleDateString("fr-FR", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </Text>
+                <Text className="text-lg font-bold">
+                  {formatHours(parseFloat(item.timeDifference))} H worked
+                </Text>
+              </View>
+
+              <View className="flex-row items-center">
+                <Pressable className="bg-blue-500 p-2 flex justify-center mr-2 rounded">
+                  <Feather name="edit" size={20} color="white" />
+                </Pressable>
+                <Pressable
+                  onPress={() => confirmDelete(item.id)}
+                  className="bg-red-700 p-2 flex justify-center rounded"
+                >
+                  <Feather name="trash" size={20} color="white" />
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
+      <View className="flex-1 flex p-2">
+        <VictoryChart 
+          domainPadding={{ x: 20 }} 
+          theme={VictoryTheme.material}
+          >
           <VictoryAxis
             dependentAxis
             tickFormat={(tick) => (tick <= 12 ? `${tick}h` : "")}
-            domain={[0, 12]} // Set the maximum hour to 12
-            tickValues={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]} // Tick values for a scale of 1 hour
+            domain={[0, 10]}
+            tickValues={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
             style={{
               axis: { stroke: "black" },
               ticks: { stroke: "black" },
@@ -141,22 +142,14 @@ const Dashboard = ({ closeModal }) => {
             }}
           />
           <VictoryAxis
-            tickFormat={(tick) => ""} // Hide tick labels for the bottom axis
-            style={{
-              axis: { stroke: "black" },
-              ticks: { stroke: "black" },
-              tickLabels: { fontSize: 20, fill: "black" },
-            }}
+            tickValues={chartData.map((item, index) => index + 1)}
+            tickFormat={chartData.map((item) => item.day)}
           />
           <VictoryBar
             data={chartData}
             x="day"
             y="hoursWorked"
             barWidth={({ index }) => index * 2 + 8}
-            style={{
-              data: { fill: "green", stroke: "green", strokeWidth: 1 },
-              labels: { fontSize: 15, fill: "black" },
-            }}
           />
         </VictoryChart>
       </View>
