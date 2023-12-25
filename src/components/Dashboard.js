@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, Pressable, Button, Alert } from "react-native";
-import { getAllDateTimeData, deleteDateTimeData } from "../../services/queries";
 import {
-  VictoryBar,
-  VictoryChart,
-  VictoryAxis,
-  VictoryTheme,
-} from "victory-native";
-import Feather from '@expo/vector-icons/Feather';
+  Text,
+  View,
+  Pressable,
+  Alert,
+  FlatList,
+} from "react-native";
+import { getAllDateTimeData, deleteDateTimeData } from "../../services/queries";
+import Feather from "@expo/vector-icons/Feather";
 
 const Dashboard = ({ closeBottomSheet }) => {
   const [data, setData] = useState([]);
@@ -16,8 +16,12 @@ const Dashboard = ({ closeBottomSheet }) => {
     // Fetch and set data when the component mounts
     getAllDateTimeData(
       (result) => {
-        // console.log("Fetched data:", result);
-        setData(result);
+        // Sort the data by startDate in descending order (latest first)
+        const sortedData = result.sort(
+          (a, b) => new Date(b.startDate) - new Date(a.startDate)
+        );
+        setData(sortedData);
+        // console.log(sortedData)
       },
 
       (error) => {
@@ -71,88 +75,93 @@ const Dashboard = ({ closeBottomSheet }) => {
     );
   };
 
-  const chartData = data.map((item) => ({
-    day: new Date(item.startDate)
-      .toLocaleDateString("fr-FR", {
-        weekday: "short",
-      })
-      .slice(0, 3), // Extract only the first 3 characters for short weekday names
-    hoursWorked: parseFloat(item.timeDifference),
+  // Group data by month
+  const groupedData = data.reduce((acc, item) => {
+    const monthKey = new Date(item.startDate).toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "numeric",
+    });
+    acc[monthKey] = acc[monthKey] || [];
+    acc[monthKey].push(item);
+    return acc;
+  }, {});
+
+  // Convert the grouped data to an array
+  const groupedArray = Object.entries(groupedData).map(([month, items]) => ({
+    month,
+    items,
   }));
 
+  // Function to format date to 'HH:mm' (hour and minute)
+const getFormattedTime = (dateString) => {
+  const date = new Date(dateString);
+  const options = { hour: "numeric", minute: "numeric" };
+  return date.toLocaleTimeString("en-US", options);
+};
+
   return (
-    <View className="flex-1 items-center p-2">
-      <View className="p-2 flex max-h-96 w-full rounded-md">
-        <Text className="text-lg font-bold mb-2">JOURS TRAVAILLES :</Text>
-        <ScrollView
-          style={{
-            padding: 1,
-            borderRadius: 4,
-            height: "80%",
-          }}
-        >
-          {data.map((item) => (
-            <View
-              key={item.id}
-              className="mb-2 p-2 bg-white flex flex-row items-center justify-between rounded-md border border-slate-400"
+    <View className="p-2 flex w-full rounded-md">
+      <Text className="text-lg font-bold mb-2">JOURS TRAVAILLES :</Text>
+
+      <FlatList
+        data={groupedArray}
+        keyExtractor={(item) => item.month}
+        renderItem={({ item }) => (
+          <View key={item.month}>
+            <Text
+              className="mt-3"
             >
-              <View className="flex">
-                <Text className="text-lg">
-                  {new Date(item.startDate).toLocaleDateString("fr-FR", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </Text>
-                <Text className="text-lg font-bold">
-                  {formatHours(parseFloat(item.timeDifference))} H worked
-                </Text>
-              </View>
-
-              <View className="flex-row items-center">
-                <Pressable className="bg-blue-500 p-2 flex justify-center mr-2 rounded">
-                  <Feather name="edit" size={20} color="white" />
-                </Pressable>
-                <Pressable
-                  onPress={() => confirmDelete(item.id)}
-                  className="bg-red-700 p-2 flex justify-center rounded"
+              {item.month}
+            </Text>
+            <FlatList
+              data={item.items}
+              numColumns={3}
+              keyExtractor={(innerItem) => innerItem.id.toString()}
+              renderItem={({ item: innerItem }) => (
+                <View
+                  key={innerItem?.id}
+                  className="flex-1 flex justify-between items-center m-1 p-1 bg-white rounded-md h-24 w-24"
                 >
-                  <Feather name="trash" size={20} color="white" />
-                </Pressable>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-
-      <View className="flex-1 flex p-2">
-        <VictoryChart 
-          domainPadding={{ x: 20 }} 
-          theme={VictoryTheme.material}
-          >
-          <VictoryAxis
-            dependentAxis
-            tickFormat={(tick) => (tick <= 12 ? `${tick}h` : "")}
-            domain={[0, 10]}
-            tickValues={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-            style={{
-              axis: { stroke: "black" },
-              ticks: { stroke: "black" },
-              tickLabels: { fontSize: 12, fill: "black" },
-            }}
-          />
-          <VictoryAxis
-            tickValues={chartData.map((item, index) => index + 1)}
-            tickFormat={chartData.map((item) => item.day)}
-          />
-          <VictoryBar
-            data={chartData}
-            x="day"
-            y="hoursWorked"
-            barWidth={({ index }) => index * 2 + 8}
-          />
-        </VictoryChart>
-      </View>
+                  {innerItem && (
+                    <View
+                      className="flex justify-between items-center"
+                    >
+                      <View className="flex-1 flex items-center">
+                        <Text className="text-base">
+                          {new Date(innerItem.startDate).toLocaleDateString(
+                            "fr-FR",
+                            {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </Text>
+                        <Text className="font-bold text-xs">
+                          {formatHours(parseFloat(innerItem.timeDifference))} H
+                        </Text>
+                        <Text>
+                          {getFormattedTime(innerItem.startDate)} - {getFormattedTime(innerItem.endDate)}
+                          </Text>
+                      </View>
+                      <View
+                        className="flex flex-row items-center gap-6"
+                      >
+                        <Pressable>
+                          <Feather name="edit" size={20} color="blue" />
+                        </Pressable>
+                        <Pressable onPress={() => confirmDelete(innerItem.id)}>
+                          <Feather name="trash" size={20} color="red" />
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              )}
+            />
+          </View>
+        )}
+      />
     </View>
   );
 };
