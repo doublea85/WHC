@@ -1,133 +1,93 @@
-import db from './db';
+import * as SQLite from 'expo-sqlite';
 
+const db = SQLite.openDatabase('DateTimeData.db');
 
-/* ------------------- CREATE ------------------- */
-export const saveDateTimeData = (startDate, endDate, timeDifference, onSuccess, onError) => {
+export const initDatabase = () => {
+  db.transaction(
+    (tx) => {
+      tx.executeSql(
+        'CREATE TABLE IF NOT EXISTS DateTimeData (id INTEGER PRIMARY KEY AUTOINCREMENT, startDate TEXT, endDate TEXT, timeDifference TEXT);'
+      );
+    },
+    (error) => {
+      console.error('Error initializing database:', error);
+    }
+  );
+};
+
+export const wipeDatabase = () => {
+  db.transaction(
+    (tx) => {
+      tx.executeSql('DROP TABLE DateTimeData;', [], (_, result) => {
+        console.log('Database wiped successfully.');
+      });
+    },
+    (error) => {
+      console.error('Error wiping database:', error);
+    }
+  );
+};
+
+// CREATE operation
+export const addDateTimeData = (startDate, endDate, timeDifference, callback) => {
   db.transaction(
     (tx) => {
       tx.executeSql(
         'INSERT INTO DateTimeData (startDate, endDate, timeDifference) VALUES (?, ?, ?);',
-        [startDate.toISOString(), endDate.toISOString(), timeDifference],
-        (_, results) => {
-          console.log('Data saved successfully');
-          if (onSuccess) {
-            onSuccess(results);
-          }
+        [startDate, endDate, timeDifference],
+        (_, result) => {
+          callback(result.insertId); // Pass the inserted ID to the callback
         },
         (_, error) => {
-          console.error('Error saving data:', error);
-          if (onError) {
-            onError(error);
-          }
+          console.error('Error adding DateTimeData:', error);
         }
       );
-    },
-    (error) => {
-      console.error('Transaction error:', error);
-      if (onError) {
-        onError(error);
-      }
     }
   );
 };
 
+// READ operation
+export const getAllDateTimeData = (callback) => {
+  db.transaction(
+    (tx) => {
+      tx.executeSql('SELECT * FROM DateTimeData;', [], (_, result) => {
+        callback(result.rows._array);
+      });
+    }
+  );
+};
 
-
-/* ------------------- READ ------------------- */
-
-export const getAllDateTimeData = (onSuccess, onError) => {
+// UPDATE operation
+export const updateDateTimeData = (id, startDate, endDate, timeDifference, callback) => {
   db.transaction(
     (tx) => {
       tx.executeSql(
-        'SELECT * FROM DateTimeData;',
-        [],
-        (_, results) => {
-          const rows = results.rows;
-          const data = Array.from({ length: rows.length }, (_, i) => rows.item(i));
-          // Alternatively, using spread syntax:
-          // const data = Array.from({ length: rows.length }, (_, i) => ({ ...rows.item(i) }));
-
-          if (onSuccess) {
-            onSuccess(data);
-          }
+        'UPDATE DateTimeData SET startDate=?, endDate=?, timeDifference=? WHERE id=?;',
+        [startDate, endDate, timeDifference, id],
+        (_, result) => {
+          callback(result.rowsAffected);
         },
         (_, error) => {
-          console.error('Error retrieving data:', error);
-          if (onError) {
-            onError(error);
-          }
+          console.error('Error updating DateTimeData:', error);
         }
       );
-    },
-    (error) => {
-      console.error('Transaction error:', error);
-      if (onError) {
-        onError(error);
-      }
     }
   );
 };
 
-
-/* ------------------- UPDATE ------------------- */
-
-export const updateDateTimeData = (id, startDate, endDate, timeDifference, onSuccess, onError) => {
+// DELETE operation
+export const deleteDateTimeData = (id, callback) => {
   db.transaction(
     (tx) => {
-      tx.executeSql(
-        'UPDATE DateTimeData SET startDate = ?, endDate = ?, timeDifference = ? WHERE id = ?;',
-        [startDate.toDateString(), endDate.toDateString(), timeDifference, id],
-        (_, results) => {
-          console.log('Data updated successfully');
-          if (onSuccess) {
-            onSuccess(results);
-          }
-        },
-        (_, error) => {
-          console.error('Error updating data:', error.message);
-          if (onError) {
-            onError(error);
-          }
+      tx.executeSql('DELETE FROM DateTimeData WHERE id=?;', [id], (_, result) => {
+        if (callback && typeof callback === 'function') {
+          callback(result.rowsAffected);
         }
-      );
-    },
-    (error) => {
-      console.error('Transaction error:', error.message);
-      if (onError) {
-        onError(error);
-      }
+      });
     }
   );
 };
 
 
+export default db;
 
-/* ------------------- Delete ------------------- */
-export const deleteDateTimeData = (id, onSuccess, onError) => {
-  db.transaction(
-    (tx) => {
-      tx.executeSql(
-        'DELETE FROM DateTimeData WHERE id = ?;',
-        [id],
-        (_, results) => {
-          console.log('Data deleted successfully');
-          if (onSuccess) {
-            onSuccess(results);
-          }
-        },
-        (_, error) => {
-          console.error('Error deleting data:', error.message);
-          if (onError) {
-            onError(error);
-          }
-        }
-      );
-    },
-    (error) => {
-      console.error('Transaction error:', error.message);
-      if (onError) {
-        onError(error);
-      }
-    }
-  );
-};
